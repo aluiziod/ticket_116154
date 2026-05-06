@@ -1,0 +1,65 @@
+<!-- # Wiz repository configuration for mobile-ios-chauffeur
+# Docs: https://docs.wiz.io/docs/exception-management-with-wiz-code#configuration-file-wiz
+#
+# Reason values:
+# - EXCEPTION: Temporary / special-case exclusion (usually short-term, with follow-up).
+# - BY_DESIGN: Intentional behavior; the finding is expected and acceptable as-is.
+# - FALSE_POSITIVE: Wiz's finding is incorrect for this context (tool misclassification).
+# - RISK_ACCEPTED: Real issue, but we explicitly accept the risk (often with justification).
+
+ignore:
+  # 1) Test JSON fixtures -- mocked data only
+  #    These files contain fake PII/secrets by design and are used
+  #    exclusively in unit/UI tests, never shipped in the app.
+  sensitive_data:
+    ALL:
+      /ChauffeurTests/Mocks/JSON/**:
+        reason: BY_DESIGN
+
+  sast:
+    ALL:
+      /ChauffeurTests/Mocks/JSON/**:
+        reason: BY_DESIGN
+    # 2a) BuildTools -- internal CI scripts, not shipped with the app
+    #     These scripts already sanitize logged data via a sanitize()
+    #     function, but Wiz's static analysis (WS-SWIFT-00137 / CWE-117)
+    #     cannot trace through it and flags them anyway.
+    WS-SWIFT-00137:
+      /BuildTools/jira_testflight_comment.swift:
+        reason: FALSE_POSITIVE
+      /BuildTools/parallel_snapshots.swift:
+        reason: FALSE_POSITIVE
+
+  # 2) UI test credentials -- test account only
+  #    LoginScreen.swift contains a hardcoded password for an internal
+  #    test account used exclusively in UI tests; never shipped in the app.
+  # 3) LaunchDarkly mobile SDK key -- client-side by design
+  #    Mobile SDK keys are read-only, scoped to feature flag evaluation,
+  #    and designed to be embedded in the app binary. This is not a
+  #    server-side secret.
+  secret:
+    blacklane-password:
+      /ChauffeurUITests/UIElements/LoginScreen.swift:
+        reason: BY_DESIGN
+    launchdarkly-mobile-sdk-key:
+      /Chauffeur/App/ChauffeurConfiguration/ChauffeurConfiguration.swift:
+        reason: BY_DESIGN
+
+  # 4) confluence_publish.yml -- curl piped to jq, not to a shell
+  #    Wiz flags "curl | jq" as a suspicious remote payload execution.
+  #    The workflow only pipes Confluence REST API JSON responses into
+  #    jq for field extraction — no shell interpreter execution.
+  cloud_configuration:
+    CIWorkflow-017:
+      /.github/workflows/confluence_publish.yml:
+        reason: FALSE_POSITIVE
+
+  # 5) Gemfile.lock -- dev/CI tooling only (Fastlane & plugins)
+  #    nkf (LGPL-2.1-only) is a transitive dependency used only as a
+  #    standalone CLI in CI; it is NOT linked into or shipped with the
+  #    iOS app binary. Wiz is flagging it as if it were a runtime dep,
+  #    which is incorrect in this context.
+  software_management:
+    ALL:
+      /Gemfile.lock:
+        reason: FALSE_POSITIVE -->
