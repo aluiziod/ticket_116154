@@ -1,0 +1,16 @@
+{
+  "name": "@wave2/temp-test-repro-wiz-axios",
+  "private": true,
+  "repository": {
+    "url": "https://github.services.mckinseywave-npn.com/wave2/temp-test-repro-wiz-axios.git",
+    "type": "git"
+  },
+  "dependencies": {
+    "botbuilder": "^4.23.1",
+    "vite-plugin-node-polyfills": "^0.24.0"
+  },
+  "scripts": {
+    "test": "true"
+  },
+  "license": "UNLICENSED"
+}
